@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  role             Role      @default(USER)
+  email            String?   @unique
+  phone            String?   @unique
+  password         String
+  name             String
+  listings         Listing[]
+  messagesSent     Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
+  otps             OTP[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Listing {
+  id          Int           @id @default(autoincrement())
+  title       String
+  price       Float
+  description String
+  images      String[] // Array of image URLs
+  location    String
+  status      ListingStatus @default(ACTIVE)
+  userId      Int
+  user        User          @relation(fields: [userId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  senderId   Int
+  receiverId Int
+  sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
+  receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  code      String
+  type      OtpType
+  expiresAt DateTime
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OtpType {
+  EMAIL
+  PHONE
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  PENDING
+}

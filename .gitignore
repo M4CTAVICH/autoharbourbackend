@@ -1,3 +1,5 @@
 .env
 node_modules
+connectpost.txt
 
+/src/generated/prisma
