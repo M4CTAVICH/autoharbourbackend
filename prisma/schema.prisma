@@ -14,12 +14,28 @@ model User {
   phone            String?   @unique
   password         String
   name             String
+  avatar           String?   // Profile picture
+  isVerified       Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  lastSeen         DateTime?
   listings         Listing[]
   messagesSent     Message[] @relation("MessagesSent")
   messagesReceived Message[] @relation("MessagesReceived")
   otps             OTP[]
+  favorites        Favorite[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  slug     String    @unique
+  icon     String?
+  parentId Int?
+  parent   Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  listings Listing[]
 }
 
 model Listing {
@@ -27,46 +43,78 @@ model Listing {
   title       String
   price       Float
   description String
-  images      String[] // Array of image URLs
+  images      String[]      // Array of image URLs
   location    String
+  latitude    Float?
+  longitude   Float?
   status      ListingStatus @default(ACTIVE)
+  categoryId  Int
+  category    Category      @relation(fields: [categoryId], references: [id])
   userId      Int
   user        User          @relation(fields: [userId], references: [id])
+  favorites   Favorite[]
+  views       Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+
+  @@index([categoryId])
+  @@index([location])
+  @@index([price])
+  @@index([status])
+}
+
+model Favorite {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  listingId Int
+  user      User    @relation(fields: [userId], references: [id])
+  listing   Listing @relation(fields: [listingId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
 }
 
 model Message {
   id         Int      @id @default(autoincrement())
   content    String
+  isRead     Boolean  @default(false)
   senderId   Int
   receiverId Int
+  listingId  Int?     // Optional: link to specific listing
   sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
   receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
   createdAt  DateTime @default(now())
+
+  @@index([senderId, receiverId])
 }
 
 model OTP {
   id        Int      @id @default(autoincrement())
   code      String
   type      OtpType
+  isUsed    Boolean  @default(false)
   expiresAt DateTime
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 enum Role {
   USER
   ADMIN
+  MODERATOR
 }
 
 enum OtpType {
-  EMAIL
-  PHONE
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  PASSWORD_RESET
 }
 
 enum ListingStatus {
   ACTIVE
   SOLD
   PENDING
+  EXPIRED
+  BANNED
 }
