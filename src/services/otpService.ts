@@ -1,7 +1,6 @@
 import prisma from "../config/db.js";
 import { sendOTPEmail } from "../utils/sendEmail.js";
 import type { CreateOTPDTO, VerifyOTPDTO, OTPResponse } from "../types/otp.js";
-import { generateToken } from "../utils/jwt.js";
 
 const generateOTPCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();

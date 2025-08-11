@@ -4,8 +4,13 @@ config();
 
 export const ENV = {
   // Server
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV || "development",
+
+  // URLs
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  API_URL: process.env.API_URL,
+  FRONTEND_URL_WWW: process.env.FRONTEND_URL_WWW,
 
   // Database
   DATABASE_URL: process.env.DATABASE_URL!,

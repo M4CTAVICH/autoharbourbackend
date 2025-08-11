@@ -1,21 +1,10 @@
-import express, {
-  type Application,
-  type Request,
-  type Response,
-} from "express";
-import dotenv from "dotenv";
+import app from "./src/app.js";
+import { ENV } from "./src/config/env.js";
 
-dotenv.config();
-
-const app: Application = express();
-const PORT = process.env.PORT;
-
-app.use(express.json());
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello, Express with TypeScript + NodeNext!");
-});
+const PORT = ENV.PORT;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🚀 AutoHarbour API running on port ${PORT}`);
+  console.log(`📖 API docs available at http://localhost:${PORT}/api`);
+  console.log(`🏥 Health check at http://localhost:${PORT}/api/health`);
 });
