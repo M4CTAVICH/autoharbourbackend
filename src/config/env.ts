@@ -34,7 +34,7 @@ export const ENV = {
   ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL || "http://localhost:9200",
 };
 
-// Validate required environment variables (removed SMS_API_KEY)
+// Validate required environment variables
 const requiredEnvVars = [
   "DATABASE_URL",
   "JWT_SECRET",
