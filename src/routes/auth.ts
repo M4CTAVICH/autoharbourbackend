@@ -8,6 +8,9 @@ import {
   resetPasswordController,
   getProfile,
   logout,
+  updateProfile,
+  changeUserPassword,
+  updateEmail,
 } from "../controller/authController.js";
 import { authenticateToken } from "../middlewares/authMiddleware.js";
 
@@ -23,6 +26,9 @@ router.post("/reset-password", resetPasswordController);
 
 // Protected routes
 router.get("/profile", authenticateToken, getProfile);
+router.put("/profile", authenticateToken, updateProfile);
+router.put("/change-password", authenticateToken, changeUserPassword);
+router.put("/update-email", authenticateToken, updateEmail);
 router.post("/logout", authenticateToken, logout);
 
 export default router;

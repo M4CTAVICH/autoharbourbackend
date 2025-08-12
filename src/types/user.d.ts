@@ -3,6 +3,14 @@ export interface CreateUserDTO {
   password: string;
   name: string;
 }
+export interface UpdateUserDTO {
+  name?: string;
+  avatar?: string;
+}
+export interface ChangePasswordDTO {
+  currentPassword: string;
+  newPassword: string;
+}
 
 export interface LoginDTO {
   email: string;

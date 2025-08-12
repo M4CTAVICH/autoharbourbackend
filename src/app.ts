@@ -49,7 +49,7 @@ app.use("*", (req, res) => {
   });
 });
 
-// Global error handler (should be last)
+// Global error handler
 app.use(errorHandler);
 
 export default app;

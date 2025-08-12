@@ -6,9 +6,17 @@ import {
   requestPasswordReset,
   resetPassword,
   getUserProfile,
+  updateUserEmail,
+  updateUserProfile,
+  changePassword,
 } from "../services/authService.js";
 import { verifyOTP } from "../services/otpService.js";
-import type { CreateUserDTO, LoginDTO } from "../types/user.js";
+import type {
+  CreateUserDTO,
+  LoginDTO,
+  UpdateUserDTO,
+  ChangePasswordDTO,
+} from "../types/user.js";
 import type { VerifyOTPDTO } from "../types/otp.js";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -240,6 +248,114 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     res.status(400).json({
       success: false,
       message: "Logout failed",
+    });
+  }
+};
+export const updateProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = (req as any).user?.userId;
+    const updateData: UpdateUserDTO = req.body;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    const updatedUser = await updateUserProfile(userId, updateData);
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
+  } catch (error: any) {
+    console.error("Update profile controller error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to update profile",
+    });
+  }
+};
+export const changeUserPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = (req as any).user?.userId;
+    const passwordData: ChangePasswordDTO = req.body;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
+      res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+      return;
+    }
+
+    const result = await changePassword(userId, passwordData);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error: any) {
+    console.error("Change password controller error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to change password",
+    });
+  }
+};
+
+export const updateEmail = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = (req as any).user?.userId;
+    const { newEmail }: { newEmail: string } = req.body;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    if (!newEmail) {
+      res.status(400).json({
+        success: false,
+        message: "New email is required",
+      });
+      return;
+    }
+
+    const result = await updateUserEmail(userId, newEmail);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error: any) {
+    console.error("Update email controller error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to update email",
     });
   }
 };
