@@ -35,6 +35,7 @@ export interface ListingResponse {
     id: number;
     name: string;
     avatar?: string;
+    phone?: string;
   };
   category: {
     id: number;

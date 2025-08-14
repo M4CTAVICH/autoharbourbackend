@@ -2,10 +2,12 @@ export interface CreateUserDTO {
   email: string;
   password: string;
   name: string;
+  phone?: string;
 }
 export interface UpdateUserDTO {
   name?: string;
   avatar?: string;
+  phone?: string;
 }
 export interface ChangePasswordDTO {
   currentPassword: string;
@@ -23,6 +25,7 @@ export interface UserResponse {
   name: string;
   avatar?: string;
   role: string;
+  phone?: string;
   isVerified: boolean;
   createdAt: Date;
 }

@@ -1,12 +1,14 @@
 import { Router } from "express";
 import authRoutes from "./auth.js";
 import categoryRoutes from "./category.js";
+import listingRoutes from "./listings.js";
 
 const router = Router();
 
 // Mount route modules
 router.use("/auth", authRoutes);
 router.use("/categories", categoryRoutes);
+router.use("/listings", listingRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {
