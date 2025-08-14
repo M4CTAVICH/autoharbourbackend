@@ -2,6 +2,7 @@ import { Router } from "express";
 import authRoutes from "./auth.js";
 import categoryRoutes from "./category.js";
 import listingRoutes from "./listings.js";
+import favoriteRoutes from "./favorite.js";
 
 const router = Router();
 
@@ -9,6 +10,7 @@ const router = Router();
 router.use("/auth", authRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/listings", listingRoutes);
+router.use("/favorites", favoriteRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {
