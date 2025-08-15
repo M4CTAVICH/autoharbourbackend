@@ -88,36 +88,89 @@ export const getUserConversations = async (
   userId: number
 ): Promise<ConversationResponse[]> => {
   try {
-    const conversations = await prisma.$queryRaw`
-      SELECT DISTINCT
-        CASE 
-          WHEN m.senderId = ${userId} THEN m.receiverId
-          ELSE m.senderId
-        END as participantId,
-        u.name as participantName,
-        u.avatar as participantAvatar,
-        u.lastSeen as participantLastSeen,
-        MAX(m.createdAt) as lastMessageTime
-      FROM "Message" m
-      JOIN "User" u ON (
-        CASE 
-          WHEN m.senderId = ${userId} THEN m.receiverId
-          ELSE m.senderId
-        END
-      ) = u.id
-      WHERE m.senderId = ${userId} OR m.receiverId = ${userId}
-      GROUP BY participantId, u.name, u.avatar, u.lastSeen
-      ORDER BY lastMessageTime DESC
-    `;
-
-    return (conversations as any[]).map((conv) => ({
-      participant: {
-        id: conv.participantid,
-        name: conv.participantname,
-        avatar: conv.participantavatar || undefined,
-        lastSeen: conv.participantlastseen || undefined,
+    const messages = await prisma.message.findMany({
+      where: {
+        OR: [{ senderId: userId }, { receiverId: userId }],
       },
-    }));
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            lastSeen: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            lastSeen: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const conversationMap = new Map<number, any>();
+
+    for (const message of messages) {
+      const participantId =
+        message.senderId === userId ? message.receiverId : message.senderId;
+      const participant =
+        message.senderId === userId ? message.receiver : message.sender;
+
+      if (!conversationMap.has(participantId)) {
+        let listing = null;
+        if (message.listingId) {
+          listing = await prisma.listing.findUnique({
+            where: { id: message.listingId },
+            select: {
+              id: true,
+              title: true,
+              images: true,
+            },
+          });
+        }
+
+        const unreadCount = await prisma.message.count({
+          where: {
+            senderId: participantId,
+            receiverId: userId,
+            isRead: false,
+          },
+        });
+
+        conversationMap.set(participantId, {
+          participant: {
+            id: participant.id,
+            name: participant.name,
+            avatar: participant.avatar || undefined,
+            lastSeen: participant.lastSeen || undefined,
+          },
+          lastMessage: {
+            content: message.content,
+            createdAt: message.createdAt,
+            isRead: message.isRead,
+          },
+          unreadCount,
+          listing: listing || undefined,
+        });
+      }
+    }
+
+    const conversations: ConversationResponse[] = Array.from(
+      conversationMap.values()
+    );
+
+    conversations.sort(
+      (a, b) =>
+        new Date(b.lastMessage.createdAt).getTime() -
+        new Date(a.lastMessage.createdAt).getTime()
+    );
+
+    return conversations;
   } catch (error) {
     console.error("Get user conversations error:", error);
     throw error;
