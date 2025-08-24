@@ -20,9 +20,9 @@ server.listen(PORT, () => {
 });
 
 process.on("SIGINT", () => {
-  console.log("🛑 Shutting down AutoHarbour server...");
+  console.log("Shutting down AutoHarbour server...");
   server.close(() => {
-    console.log("✅ Server closed gracefully");
+    console.log("Server closed gracefully");
     process.exit(0);
   });
 });
