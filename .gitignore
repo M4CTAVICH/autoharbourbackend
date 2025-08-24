@@ -1,5 +1,5 @@
 .env
 node_modules
 connectpost.txt
-
+sockettesting.html
 /src/generated/prisma
