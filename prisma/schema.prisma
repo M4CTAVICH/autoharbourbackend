@@ -14,15 +14,27 @@ model User {
   phone            String?   @unique
   password         String
   name             String
-  avatar           String?   // Profile picture
+  avatar           String?
+  bio              String?   
+  location         String?   
+  dateOfBirth      DateTime? 
   isVerified       Boolean   @default(false)
   isActive         Boolean   @default(true)
   lastSeen         DateTime?
+  rating           Float?   
+  reviewCount      Int       @default(0) 
+  
   listings         Listing[]
   messagesSent     Message[] @relation("MessagesSent")
   messagesReceived Message[] @relation("MessagesReceived")
   otps             OTP[]
   favorites        Favorite[]
+  verificationRequests VerificationRequest[] 
+  verificationReviews VerificationRequest[] @relation("VerificationReviewer") 
+
+  givenReviews     UserReview[] @relation("ReviewGiver") 
+  receivedReviews  UserReview[] @relation("ReviewReceiver") 
+  
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
@@ -43,7 +55,7 @@ model Listing {
   title       String
   price       Float
   description String
-  images      String[]      // Array of image URLs
+  images      String[]     
   location    String
   latitude    Float?
   longitude   Float?
@@ -54,6 +66,7 @@ model Listing {
   user        User          @relation(fields: [userId], references: [id])
   favorites   Favorite[]
   views       Int           @default(0)
+  userReviews UserReview[] 
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -80,7 +93,7 @@ model Message {
   isRead     Boolean  @default(false)
   senderId   Int
   receiverId Int
-  listingId  Int?     // Optional: link to specific listing
+  listingId  Int?     
   sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
   receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
   createdAt  DateTime @default(now())
@@ -97,6 +110,56 @@ model OTP {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+model VerificationRequest {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  documentType     DocumentType
+  documentNumber   String
+  documentImages   String[]
+  status           VerificationStatus @default(PENDING)
+  submittedAt      DateTime  @default(now())
+  reviewedAt       DateTime?
+  reviewedBy       Int?
+  rejectionReason  String?
+  
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer         User?     @relation("VerificationReviewer", fields: [reviewedBy], references: [id])
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  
+  
+}
+
+model UserReview {
+  id           Int      @id @default(autoincrement())
+  rating       Float    
+  comment      String?
+  giverId      Int
+  receiverId   Int
+  listingId    Int?   
+  
+  giver        User     @relation("ReviewGiver", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver     User     @relation("ReviewReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  listing      Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@unique([giverId, receiverId, listingId]) 
+}
+
+enum DocumentType {
+  ID_CARD
+  PASSPORT
+  DRIVERS_LICENSE
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Role {

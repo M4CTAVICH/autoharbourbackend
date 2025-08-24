@@ -5,6 +5,7 @@ import listingRoutes from "./listings.js";
 import favoriteRoutes from "./favorite.js";
 import messageRoutes from "./messaging.js";
 import uploadRoutes from "./upload.js";
+import profileRoutes from "./profile.js";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use("/listings", listingRoutes);
 router.use("/favorites", favoriteRoutes);
 router.use("/messages", messageRoutes);
 router.use("/upload", uploadRoutes);
+router.use("/profile", profileRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {
@@ -35,8 +37,10 @@ router.get("/", (req, res) => {
       auth: "/api/auth",
       categories: "/api/categories",
       listings: "/api/listings",
+      favorites: "/api/favorites",
       messages: "/api/messages",
-      admin: "/api/admin",
+      upload: "/api/upload",
+      profile: "/api/profile",
     },
   });
 });
