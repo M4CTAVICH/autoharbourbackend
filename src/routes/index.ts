@@ -6,6 +6,7 @@ import favoriteRoutes from "./favorite.js";
 import messageRoutes from "./messaging.js";
 import uploadRoutes from "./upload.js";
 import profileRoutes from "./profile.js";
+import searchRoutes from "./search.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use("/favorites", favoriteRoutes);
 router.use("/messages", messageRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/profile", profileRoutes);
+router.use("/search", searchRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {

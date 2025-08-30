@@ -34,6 +34,8 @@ model User {
 
   givenReviews     UserReview[] @relation("ReviewGiver") 
   receivedReviews  UserReview[] @relation("ReviewReceiver") 
+  savedSearches    SavedSearch[] 
+
   
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -148,6 +150,21 @@ model UserReview {
   updatedAt    DateTime @updatedAt
   
   @@unique([giverId, receiverId, listingId]) 
+}
+model SavedSearch {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  name          String
+  searchParams  String    // JSON string of search parameters
+  alertEnabled  Boolean   @default(false)
+  lastRun       DateTime?
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([userId])
 }
 
 enum DocumentType {
