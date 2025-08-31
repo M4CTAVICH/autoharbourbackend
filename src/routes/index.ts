@@ -9,6 +9,7 @@ import profileRoutes from "./profile.js";
 import searchRoutes from "./search.js";
 import adminRoutes from "./admin.js";
 import reportRoutes from "./reports.js";
+import notificationRoutes from "./notification.js";
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use("/profile", profileRoutes);
 router.use("/search", searchRoutes);
 router.use("/admin", adminRoutes);
 router.use("/reports", reportRoutes);
+router.use("/notifications", notificationRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {
@@ -50,6 +52,7 @@ router.get("/", (req, res) => {
       search: "/api/search",
       admin: "/api/admin",
       reports: "/api/reports",
+      notifications: "/api/notifications",
     },
   });
 });

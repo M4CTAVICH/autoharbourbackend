@@ -42,6 +42,9 @@ model User {
   adminBans        BanLog[]                @relation("AdminBans")
   systemSettingsModified SystemSettings[]      @relation("SystemSettingsModifier")
   listingModerations    ListingModerationLog[] @relation("ListingModerations")
+  notifications         Notification[]
+  notificationSettings  NotificationSetting?
+  notificationQueue     NotificationQueue[]
   
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -278,8 +281,70 @@ model ListingModerationLog {
   @@index([action])
   @@index([createdAt])
 }
+model Notification {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?    // Additional data (listing ID, message ID, etc.)
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-// Add new enums
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model NotificationSetting {
+  id                    Int     @id @default(autoincrement())
+  userId                Int     @unique
+  emailNotifications    Boolean @default(true)
+  newMessageEmail       Boolean @default(true)
+  searchMatchEmail      Boolean @default(true)
+  listingInquiryEmail   Boolean @default(true)
+  listingFavoritedEmail Boolean @default(false)
+  reportResolvedEmail   Boolean @default(true)
+  weeklyDigestEmail     Boolean @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_settings")
+}
+
+model NotificationQueue {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  type        NotificationType
+  title       String
+  message     String
+  emailSent   Boolean  @default(false)
+  data        Json?
+  scheduledAt DateTime @default(now())
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_queue")
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  SEARCH_MATCH
+  LISTING_FAVORITED
+  LISTING_INQUIRY
+  PROFILE_VIEW
+  REPORT_RESOLVED
+  ACCOUNT_SECURITY
+  WEEKLY_DIGEST
+  PLATFORM_UPDATE
+}
+
+
 enum ReportType {
   USER
   LISTING
