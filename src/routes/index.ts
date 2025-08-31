@@ -8,6 +8,7 @@ import uploadRoutes from "./upload.js";
 import profileRoutes from "./profile.js";
 import searchRoutes from "./search.js";
 import adminRoutes from "./admin.js";
+import reportRoutes from "./reports.js";
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.use("/upload", uploadRoutes);
 router.use("/profile", profileRoutes);
 router.use("/search", searchRoutes);
 router.use("/admin", adminRoutes);
+router.use("/reports", reportRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {
@@ -47,6 +49,7 @@ router.get("/", (req, res) => {
       profile: "/api/profile",
       search: "/api/search",
       admin: "/api/admin",
+      reports: "/api/reports",
     },
   });
 });
