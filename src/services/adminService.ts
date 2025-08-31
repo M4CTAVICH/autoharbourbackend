@@ -50,7 +50,9 @@ export const getDashboardStatsService = async () => {
       prisma.listing.count({
         where: { status: "PENDING" },
       }),
-
+      prisma.report.count({
+        where: { status: "PENDING" },
+      }),
       prisma.user.count({
         where: { createdAt: { gte: thisMonth } },
       }),
@@ -68,6 +70,7 @@ export const getDashboardStatsService = async () => {
       lastMonthUsers > 0
         ? ((thisMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
         : 0;
+
     return {
       today: {
         newUsers: todayUsers,
@@ -95,6 +98,7 @@ export const getDashboardStatsService = async () => {
     throw error;
   }
 };
+
 export const getUsersService = async (
   page = 1,
   limit = 20,
@@ -121,7 +125,7 @@ export const getUsersService = async (
     if (search) {
       whereClause.OR = [
         { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive " } },
+        { email: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -158,6 +162,7 @@ export const getUsersService = async (
       default:
         orderBy = { createdAt: sortOrder };
     }
+
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where: whereClause,
@@ -201,7 +206,7 @@ export const getUsersService = async (
     const processedUsers = users.map((user: any) => ({
       ...user,
       listingCount: user._count?.listings ?? 0,
-      favouriteCount: user._count.favorites,
+      favoriteCount: user._count.favorites,
       reportCount: user._count.reportsSubmitted,
       isBanned: user.userBans.length > 0,
       banInfo: user.userBans[0] || null,
@@ -213,7 +218,7 @@ export const getUsersService = async (
         page,
         limit: Math.min(limit, 50),
         total,
-        paegs: Math.ceil(total / Math.min(limit, 50)),
+        pages: Math.ceil(total / Math.min(limit, 50)),
       },
     };
   } catch (error) {
@@ -226,13 +231,14 @@ export const banUserService = async (
   userId: number,
   adminId: number,
   reason: string,
-  duration: number
+  duration?: number
 ) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, role: true },
     });
+
     if (!user) {
       throw new Error("User not found");
     }
@@ -271,6 +277,7 @@ export const banUserService = async (
       where: { id: userId },
       data: { isActive: false },
     });
+
     return banLog;
   } catch (error) {
     console.error("Ban user service error: ", error);
@@ -285,8 +292,9 @@ export const unbanUserService = async (
 ) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: adminId },
+      where: { id: userId },
     });
+
     if (!user) {
       throw new Error("User not found");
     }
@@ -321,6 +329,7 @@ export const unbanUserService = async (
       where: { id: userId },
       data: { isActive: true },
     });
+
     return unbanLog;
   } catch (error) {
     console.error("Unban user service error:", error);
@@ -355,6 +364,7 @@ export const getReportsService = async (
     if (targetType && targetType !== "ALL") {
       whereClause.targetType = targetType;
     }
+
     const [reports, total] = await Promise.all([
       prisma.report.findMany({
         where: whereClause,
@@ -392,6 +402,7 @@ export const getReportsService = async (
         where: whereClause,
       }),
     ]);
+
     return {
       reports,
       pagination: {

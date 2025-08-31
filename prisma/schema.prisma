@@ -35,11 +35,11 @@ model User {
   givenReviews     UserReview[] @relation("ReviewGiver") 
   receivedReviews  UserReview[] @relation("ReviewReceiver") 
   savedSearches    SavedSearch[] 
-  adminActions          AdminAction[]           @relation("AdminActions")
-  reportsSubmitted      Report[]                @relation("ReportsSubmitted")
-  reportsReviewed       Report[]                @relation("ReportsReviewed")
-  userBans              BanLog[]                @relation("UserBans")
-  adminBans             BanLog[]                @relation("AdminBans")
+  adminActions     AdminAction[]           @relation("AdminActions")
+  reportsSubmitted Report[]                @relation("ReportsSubmitted")
+  reportsReviewed  Report[]                @relation("ReportsReviewed")
+  userBans         BanLog[]                @relation("UserBans")
+  adminBans        BanLog[]                @relation("AdminBans")
   systemSettingsModified SystemSettings[]      @relation("SystemSettingsModifier")
   listingModerations    ListingModerationLog[] @relation("ListingModerations")
   
@@ -163,7 +163,7 @@ model SavedSearch {
   id            Int       @id @default(autoincrement())
   userId        Int
   name          String
-  searchParams  String    // JSON string of search parameters
+  searchParams  String    
   alertEnabled  Boolean   @default(false)
   lastRun       DateTime?
   
@@ -177,13 +177,13 @@ model SavedSearch {
 model AdminAction {
   id          Int      @id @default(autoincrement())
   adminId     Int
-  actionType  String   // BAN_USER, APPROVE_LISTING, DELETE_CONTENT, etc.
-  targetType  String?  // USER, LISTING, REPORT, SYSTEM
-  targetId    Int?     // ID of the target (user, listing, etc.)
-  details     Json?    // Additional action details
+  actionType  String   
+  targetType  String?  
+  targetId    Int?     
+  details     Json?    
   ipAddress   String?
   userAgent   String?
-  endpoint    String?  // API endpoint used
+  endpoint    String?  
   
   admin       User     @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
   
@@ -197,14 +197,14 @@ model AdminAction {
 model Report {
   id          Int         @id @default(autoincrement())
   reporterId  Int
-  targetType  ReportType  // USER, LISTING, MESSAGE
+  targetType  ReportType  
   targetId    Int
-  reason      String      // Spam, Inappropriate, Fraud, etc.
+  reason      String      
   description String?
   status      ReportStatus @default(PENDING)
   reviewedBy  Int?
   reviewedAt  DateTime?
-  resolution  String?     // Admin's resolution notes
+  resolution  String?     
   
   reporter    User        @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
   reviewer    User?       @relation("ReportsReviewed", fields: [reviewedBy], references: [id], onDelete: SetNull)
@@ -222,9 +222,9 @@ model BanLog {
   id          Int      @id @default(autoincrement())
   userId      Int
   adminId     Int
-  action      BanAction // BAN, UNBAN, TEMPORARY_BAN
+  action      BanAction 
   reason      String
-  duration    Int?     // Duration in days for temporary bans
+  duration    Int?    
   expiresAt   DateTime?
   isActive    Boolean  @default(true)
   
@@ -244,7 +244,7 @@ model SystemSettings {
   key                   String   @unique
   value                 String
   description           String?
-  category              String?  // GENERAL, MODERATION, SECURITY, etc.
+  category              String?  
   dataType              String   @default("string") // string, number, boolean, json
   isPublic              Boolean  @default(false)
   lastModifiedBy        Int?
@@ -262,7 +262,7 @@ model ListingModerationLog {
   id          Int                @id @default(autoincrement())
   listingId   Int
   adminId     Int
-  action      ModerationAction   // APPROVE, REJECT, FLAG, FEATURE
+  action      ModerationAction   
   reason      String?
   oldStatus   String?
   newStatus   String?
