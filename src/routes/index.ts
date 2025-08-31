@@ -7,6 +7,7 @@ import messageRoutes from "./messaging.js";
 import uploadRoutes from "./upload.js";
 import profileRoutes from "./profile.js";
 import searchRoutes from "./search.js";
+import adminRoutes from "./admin.js";
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use("/messages", messageRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/profile", profileRoutes);
 router.use("/search", searchRoutes);
+router.use("/admin", adminRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {
@@ -43,6 +45,8 @@ router.get("/", (req, res) => {
       messages: "/api/messages",
       upload: "/api/upload",
       profile: "/api/profile",
+      search: "/api/search",
+      admin: "/api/admin",
     },
   });
 });
