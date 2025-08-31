@@ -35,7 +35,13 @@ model User {
   givenReviews     UserReview[] @relation("ReviewGiver") 
   receivedReviews  UserReview[] @relation("ReviewReceiver") 
   savedSearches    SavedSearch[] 
-
+  adminActions          AdminAction[]           @relation("AdminActions")
+  reportsSubmitted      Report[]                @relation("ReportsSubmitted")
+  reportsReviewed       Report[]                @relation("ReportsReviewed")
+  userBans              BanLog[]                @relation("UserBans")
+  adminBans             BanLog[]                @relation("AdminBans")
+  systemSettingsModified SystemSettings[]      @relation("SystemSettingsModifier")
+  listingModerations    ListingModerationLog[] @relation("ListingModerations")
   
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -71,6 +77,8 @@ model Listing {
   userReviews UserReview[] 
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  moderationLogs ListingModerationLog[] @relation("ModerationLogs")
+
 
   @@index([categoryId])
   @@index([location])
@@ -166,6 +174,140 @@ model SavedSearch {
   
   @@index([userId])
 }
+model AdminAction {
+  id          Int      @id @default(autoincrement())
+  adminId     Int
+  actionType  String   // BAN_USER, APPROVE_LISTING, DELETE_CONTENT, etc.
+  targetType  String?  // USER, LISTING, REPORT, SYSTEM
+  targetId    Int?     // ID of the target (user, listing, etc.)
+  details     Json?    // Additional action details
+  ipAddress   String?
+  userAgent   String?
+  endpoint    String?  // API endpoint used
+  
+  admin       User     @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([adminId])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+model Report {
+  id          Int         @id @default(autoincrement())
+  reporterId  Int
+  targetType  ReportType  // USER, LISTING, MESSAGE
+  targetId    Int
+  reason      String      // Spam, Inappropriate, Fraud, etc.
+  description String?
+  status      ReportStatus @default(PENDING)
+  reviewedBy  Int?
+  reviewedAt  DateTime?
+  resolution  String?     // Admin's resolution notes
+  
+  reporter    User        @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewer    User?       @relation("ReportsReviewed", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@index([reporterId])
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model BanLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  adminId     Int
+  action      BanAction // BAN, UNBAN, TEMPORARY_BAN
+  reason      String
+  duration    Int?     // Duration in days for temporary bans
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  
+  user        User     @relation("UserBans", fields: [userId], references: [id], onDelete: Cascade)
+  admin       User     @relation("AdminBans", fields: [adminId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([adminId])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model SystemSettings {
+  id                    Int      @id @default(autoincrement())
+  key                   String   @unique
+  value                 String
+  description           String?
+  category              String?  // GENERAL, MODERATION, SECURITY, etc.
+  dataType              String   @default("string") // string, number, boolean, json
+  isPublic              Boolean  @default(false)
+  lastModifiedBy        Int?
+  
+  lastModifiedByAdmin   User?    @relation("SystemSettingsModifier", fields: [lastModifiedBy], references: [id], onDelete: SetNull)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([category])
+  @@index([isPublic])
+}
+
+model ListingModerationLog {
+  id          Int                @id @default(autoincrement())
+  listingId   Int
+  adminId     Int
+  action      ModerationAction   // APPROVE, REJECT, FLAG, FEATURE
+  reason      String?
+  oldStatus   String?
+  newStatus   String?
+  notes       String?
+  
+  listing     Listing           @relation("ModerationLogs", fields: [listingId], references: [id], onDelete: Cascade)
+  admin       User              @relation("ListingModerations", fields: [adminId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime          @default(now())
+  
+  @@index([listingId])
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// Add new enums
+enum ReportType {
+  USER
+  LISTING
+  MESSAGE
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum BanAction {
+  BAN
+  UNBAN
+  TEMPORARY_BAN
+  WARNING
+}
+
+enum ModerationAction {
+  APPROVE
+  REJECT
+  FLAG
+  FEATURE
+  UNFLAG
+  REMOVE_FEATURE
+}
 
 enum DocumentType {
   ID_CARD
@@ -183,6 +325,7 @@ enum Role {
   USER
   ADMIN
   MODERATOR
+  SUPER_ADMIN
 }
 
 enum OtpType {
