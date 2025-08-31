@@ -271,3 +271,5 @@ export const requireAdminOrModeratorUpdated = requireRole([
   "MODERATOR",
   "SUPER_ADMIN",
 ]);
+export const requireAdmin = requireAdminUpdated;
+export const requireAdminOrModerator = requireAdminOrModeratorUpdated;

@@ -142,6 +142,9 @@ export const getUsersService = async (
         whereClause.userBans = {
           some: {
             isActive: true,
+            action: {
+              in: ["BAN", "TEMPORARY_BAN"],
+            },
             OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
           },
         };
@@ -246,10 +249,14 @@ export const banUserService = async (
       throw new Error("Cannot ban super admin");
     }
 
+    //Only check for active BAN/TEMPORARY_BAN actions
     const existingBan = await prisma.banLog.findFirst({
       where: {
         userId,
         isActive: true,
+        action: {
+          in: ["BAN", "TEMPORARY_BAN"],
+        },
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
     });
@@ -298,11 +305,14 @@ export const unbanUserService = async (
     if (!user) {
       throw new Error("User not found");
     }
-
+    //only look for BAN and TEMP BAN ACTIONS
     const activeBan = await prisma.banLog.findFirst({
       where: {
         userId,
         isActive: true,
+        action: {
+          in: ["BAN", "TEMPORARY_BAN"],
+        },
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
     });
@@ -311,26 +321,35 @@ export const unbanUserService = async (
       throw new Error("User is not currently banned");
     }
 
-    await prisma.banLog.update({
-      where: { id: activeBan.id },
-      data: { isActive: false },
+    // Use transaction to ensure consistency
+    const result = await prisma.$transaction(async (tx) => {
+      // Deactivate the existing ban
+      await tx.banLog.update({
+        where: { id: activeBan.id },
+        data: { isActive: false },
+      });
+
+      // Create unban log
+      const unbanLog = await tx.banLog.create({
+        data: {
+          userId,
+          adminId,
+          action: "UNBAN",
+          reason,
+          isActive: true, // Mark the unban action as active
+        },
+      });
+
+      // Reactivate user account
+      await tx.user.update({
+        where: { id: userId },
+        data: { isActive: true },
+      });
+
+      return unbanLog;
     });
 
-    const unbanLog = await prisma.banLog.create({
-      data: {
-        userId,
-        adminId,
-        action: "UNBAN",
-        reason,
-      },
-    });
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: { isActive: true },
-    });
-
-    return unbanLog;
+    return result;
   } catch (error) {
     console.error("Unban user service error:", error);
     throw error;

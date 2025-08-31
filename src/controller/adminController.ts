@@ -247,7 +247,9 @@ export const banUserController = async (
       targetType: "USER",
       targetId: userId,
       details: { reason, duration },
-      ...(req as any).adminAction,
+      ipAddress: (req as any).adminAction?.ipAddress,
+      userAgent: (req as any).adminAction?.userAgent,
+      endpoint: (req as any).adminAction?.endpoint,
     });
 
     res.status(200).json({
@@ -309,9 +311,10 @@ export const unbanUserController = async (
       targetType: "USER",
       targetId: userId,
       details: { reason },
-      ...(req as any).adminAction,
+      ipAddress: (req as any).adminAction?.ipAddress,
+      userAgent: (req as any).adminAction?.userAgent,
+      endpoint: (req as any).adminAction?.endpoint,
     });
-
     res.status(200).json({
       success: true,
       message: "User unbanned successfully",
@@ -428,7 +431,9 @@ export const resolveReportController = async (
       targetType: "REPORT",
       targetId: reportId,
       details: { status, resolution },
-      ...(req as any).adminAction,
+      ipAddress: (req as any).adminAction?.ipAddress,
+      userAgent: (req as any).adminAction?.userAgent,
+      endpoint: (req as any).adminAction?.endpoint,
     });
 
     res.status(200).json({
