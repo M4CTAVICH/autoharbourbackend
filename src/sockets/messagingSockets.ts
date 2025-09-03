@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http";
 import jwt from "jsonwebtoken";
 import prisma from "../config/db.js";
 import { ENV } from "../config/env.js";
+import { setupNotificationSocket } from "./notificationSocket.js"; // Add this import
 
 interface AuthenticatedSocket extends Socket {
   userId?: number;
@@ -20,6 +21,7 @@ export const initializeMessageSockets = (httpServer: HttpServer) => {
     },
   });
 
+  // Your existing authentication middleware
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token;
@@ -47,6 +49,7 @@ export const initializeMessageSockets = (httpServer: HttpServer) => {
     }
   });
 
+  // Your existing connection handler
   io.on("connection", (socket) => {
     const authSocket = socket as AuthenticatedSocket;
 
@@ -55,18 +58,16 @@ export const initializeMessageSockets = (httpServer: HttpServer) => {
     );
 
     authSocket.join(`user_${authSocket.userId}`);
-
     updateUserOnlineStatus(authSocket.userId!, true);
 
+    // Your existing message handlers...
     authSocket.on(
       "join_conversation",
       async (data: { otherUserId: number }) => {
         try {
           const { otherUserId } = data;
-
           const roomName = [authSocket.userId!, otherUserId].sort().join("_");
           authSocket.join(roomName);
-
           console.log(
             `User ${authSocket.userId} joined conversation with ${otherUserId}`
           );
@@ -179,6 +180,7 @@ export const initializeMessageSockets = (httpServer: HttpServer) => {
       }
     );
 
+    // Your other existing handlers (typing, mark read, disconnect...)
     authSocket.on("typing_start", (data: { receiverId: number }) => {
       const { receiverId } = data;
       const roomName = [authSocket.userId!, receiverId].sort().join("_");
@@ -233,10 +235,11 @@ export const initializeMessageSockets = (httpServer: HttpServer) => {
       console.log(
         `User ${authSocket.userName} (ID: ${authSocket.userId}) disconnected`
       );
-
       updateUserOnlineStatus(authSocket.userId!, false);
     });
   });
+
+  setupNotificationSocket(io);
 
   return io;
 };

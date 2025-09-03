@@ -5,6 +5,12 @@ import type {
   NotificationSetting,
 } from "@prisma/client";
 
+let io: any = null;
+
+export const setSocketInstance = (SocketInstance: any) => {
+  io = SocketInstance;
+};
+
 export const createNotificationService = async ({
   userId,
   type,
@@ -19,7 +25,6 @@ export const createNotificationService = async ({
   data?: any;
 }) => {
   try {
-    // Create in-app notification
     const notification = await prisma.notification.create({
       data: {
         userId,
@@ -30,19 +35,36 @@ export const createNotificationService = async ({
       },
     });
 
-    // Check if user wants email notifications
+    if (io) {
+      io.to(`user_${userId}`).emit("new_notification", {
+        id: notification.id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        data: notification.data,
+        read: false,
+        createdAt: notification.createdAt,
+      });
+
+      const unreadCount = await prisma.notification.count({
+        where: { userId, read: false },
+      });
+
+      io.to(`user_${userId}`).emit("notification_count_updated", {
+        unreadCount,
+      });
+    }
+
     const settings = await prisma.notificationSetting.findUnique({
       where: { userId },
     });
 
-    // If no settings exist, create default settings
     if (!settings) {
       await prisma.notificationSetting.create({
         data: { userId },
       });
     }
 
-    // Queue email notification if user has email notifications enabled
     const emailEnabled = settings?.emailNotifications ?? true;
     const typeEmailEnabled = getEmailEnabledForType(type, settings);
 
@@ -136,6 +158,16 @@ export const markNotificationAsReadService = async (
       data: { read: true },
     });
 
+    if (io) {
+      const unreadCount = await prisma.notification.count({
+        where: { userId, read: false },
+      });
+
+      io.to(`user_${userId}`).emit("notification_count_updated", {
+        unreadCount,
+      });
+    }
+
     return updatedNotification;
   } catch (error) {
     console.error("Mark notification as read service error:", error);
@@ -154,6 +186,12 @@ export const markAllNotificationsAsReadService = async (userId: number) => {
         read: true,
       },
     });
+
+    if (io) {
+      io.to(`user_${userId}`).emit("notification_count_updated", {
+        unreadCount: 0,
+      });
+    }
 
     return result;
   } catch (error) {

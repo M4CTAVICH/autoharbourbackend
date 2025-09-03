@@ -4,6 +4,7 @@ import type {
   MessageResponse,
   ConversationResponse,
 } from "../types/message.js";
+import { createNotificationService } from "./notificationService.js";
 
 export const sendMessage = async (
   senderId: number,
@@ -56,6 +57,21 @@ export const sendMessage = async (
             avatar: true,
           },
         },
+      },
+    });
+    await createNotificationService({
+      userId: messageData.receiverId,
+      type: "NEW_MESSAGE",
+      title: "New message received",
+      message: `You received a new message from ${message.sender.name}`,
+      data: {
+        messageId: message.id,
+        senderId: senderId,
+        senderName: message.sender.name,
+        conversationId: `${Math.min(
+          senderId,
+          messageData.receiverId
+        )}-${Math.max(senderId, messageData.receiverId)}`,
       },
     });
 
