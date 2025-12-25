@@ -222,7 +222,7 @@ export const getNotificationCountController = async (
     const result = await getUserNotificationsService({
       userId,
       page: 1,
-      limit: 1, // We only need the count
+      limit: 1,
       unreadOnly: false,
     });
 

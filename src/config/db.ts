@@ -19,7 +19,6 @@ if (process.env.NODE_ENV === "development") {
   globalThis.__prisma = prisma;
 }
 
-// Graceful shutdown
 process.on("beforeExit", async () => {
   await prisma.$disconnect();
 });
